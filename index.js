@@ -40,12 +40,12 @@ const getDays = (data) => {
 
 const getIconFromCode = (code) => {
     const icons = [
-        { numbers: [0], icon: 'sun-fill.svg', filter: 'invert(86%) sepia(45%) saturate(6054%) hue-rotate(4deg) brightness(98%) contrast(92%)' }, // Clear
-        { numbers: [1,2,3], icon: 'cloud-sun-fill.svg', filter: 'invert(60%) sepia(10%) saturate(537%) hue-rotate(167deg) brightness(88%) contrast(90%)' }, // Cloudy
-        { numbers: [45, 48], icon: 'cloud-fog.svg', filter: 'invert(58%) sepia(0%) saturate(1%) hue-rotate(37deg) brightness(97%) contrast(89%)' }, // Foggy
-        { numbers: [51, 53, 55, 61, 63, 65, 80, 81, 82], icon: 'cloud-rain-fill.svg', filter: 'invert(16%) sepia(70%) saturate(2152%) hue-rotate(230deg) brightness(94%) contrast(95%)' }, // Rain and drizzle
-        { numbers: [56, 57, 66, 67, 71, 73, 75, 77, 85, 86], icon: 'cloud-snow-fill.svg', filter: 'invert(58%) sepia(0%) saturate(1%) hue-rotate(37deg) brightness(97%) contrast(89%)' }, // Snow, freezing rain and freezing drizzle
-        { numbers: [95, 96, 99], icon: 'cloud-lightning.svg', filter: 'invert(16%) sepia(35%) saturate(4144%) hue-rotate(230deg) brightness(101%) contrast(94%)'} // Lightning / thunder
+        { numbers: [0], icon: 'sun-fill.svg', filter: 'invert(86%) sepia(45%) saturate(6054%) hue-rotate(4deg) brightness(98%) contrast(92%)', quote:"The sun's out, and I'm indoors. Just soaking up that vitamin D through the window, you know?" }, // Clear
+        { numbers: [1, 2, 3], icon: 'cloud-sun-fill.svg', filter: 'invert(60%) sepia(10%) saturate(537%) hue-rotate(167deg) brightness(88%) contrast(90%)', quote: "Partly cloudy, partly confusing. Weather, you're as indecisive as my lunch choices. " },
+        { numbers: [45, 48], icon: 'cloud-fog.svg', filter: 'invert(58%) sepia(0%) saturate(1%) hue-rotate(37deg) brightness(97%) contrast(89%)', quote:" Fog so thick, I'm half-expecting Sherlock Holmes to emerge with a magnifying glass any second now. " }, // Foggy
+        { numbers: [51, 53, 55, 61, 63, 65, 80, 81, 82], icon: 'cloud-rain-fill.svg', filter: 'invert(16%) sepia(70%) saturate(2152%) hue-rotate(230deg) brightness(94%) contrast(95%)', quote:"Today's weather forecast: scattered raindrops with a chance of me questioning my life choices." }, // Rain and drizzle
+        { numbers: [56, 57, 66, 67, 71, 73, 75, 77, 85, 86], icon: 'cloud-snow-fill.svg', filter: 'invert(58%) sepia(0%) saturate(1%) hue-rotate(37deg) brightness(97%) contrast(89%)', quote:"Brace yourselves, winter's latest attempt to freeze our souls has arrived. Thanks a bunch, nature" }, // Snow, freezing rain and freezing drizzle
+        { numbers: [95, 96, 99], icon: 'cloud-lightning.svg', filter: 'invert(16%) sepia(35%) saturate(4144%) hue-rotate(230deg) brightness(101%) contrast(94%)', quote:"Today's forecast: a shocking performance by Mother Nature, featuring her electrifying thunder and lightning ensemble."} // Lightning / thunder
     ];
     return icons.find(icon => icon.numbers.includes(code));
 }
@@ -81,8 +81,9 @@ async function DayElement(day) {
     dayIcon.style.filter = getIconFromCode(day.data.icon).filter;
     maxTempContainer.appendChild(dayIcon);
 
-    const dayMaxTemperature = document.createElement('span');
-    dayMaxTemperature.innerText = day.data.maxTemperature + '°';
+ const dayMaxTemperature = document.createElement('span');
+    const roundedMaxTemperature = Math.round(day.data.maxTemperature * 9/5 + 32); // Rounded here
+    dayMaxTemperature.innerText = roundedMaxTemperature + '°';
     dayMaxTemperature.style.filter = getIconFromCode(day.data.icon).filter;
     dayMaxTemperature.classList.add('max-temperature');
     maxTempContainer.appendChild(dayMaxTemperature);
@@ -108,42 +109,57 @@ async function DayElement(day) {
 
     element.appendChild(windContainer);
 
-    const dayMinTemperature = document.createElement('span');
-    dayMinTemperature.innerText = day.data.minTemperature + '°';
+     const dayMinTemperature = document.createElement('span');
+    const roundedMinTemperature = Math.round(day.data.minTemperature); // Rounded here
+    dayMinTemperature.innerText = roundedMinTemperature * 9/5 + 32 + '°';
     dayMinTemperature.classList.add('min-temperature');
     element.appendChild(dayMinTemperature);
 
     return element;
 }
 
-const loadVariables = () => {
+const loadVariables = async () => {
     changeLoadingBar(10, 'Getting location... (Allow location access if stuck)');
     navigator.geolocation.getCurrentPosition(async (position) => {
         changeLoadingBar(20, 'Getting weather...');
         const weather = await (await fetchWeather(position.coords.latitude, position.coords.longitude)).json();
+
         changeLoadingBar(40, 'Getting city...');
         const city = await (await fetchCity(position.coords.latitude, position.coords.longitude)).json();
         changeLoadingBar(70, 'Sorting information...');
         const days = getDays(weather);
-    
+
         const daysContainer = document.getElementById('days_container');
         daysContainer.innerHTML = '';
         days.forEach(async (day) => daysContainer.appendChild(await DayElement(day)));
         changeLoadingBar(90, 'Rendering information...');
-    
-        document.getElementById('location').innerText = `${city.address.city == 'undefined' ? '' : city.address.city + ', '}${city.address.country}`;
-        document.getElementById('banner_icon').src = `assets/${getIconFromCode(weather.current_weather.weathercode).icon}`;
-        document.getElementById('banner_icon').style.filter = getIconFromCode(weather.current_weather.weathercode).filter;
-        document.getElementById('current_temperature').innerText = weather.current_weather.temperature + '°';
-        document.getElementById('feels_like').innerText = 'Feels like ' + weather.current_weather.temperature + '°';
-    
+
+
+        // Set the banner icon and temperature
+        const iconData = getIconFromCode(weather.current_weather.weathercode);
+        document.getElementById('banner_icon').src = `assets/${iconData.icon}`;
+        document.getElementById('banner_icon').style.filter = iconData.filter;
+
+        const fahrenheitTemperature = (weather.current_weather.temperature * 9/5 + 32).toFixed(0);
+        
+        // Rounding here
+        const roundedTemperature = Math.round(fahrenheitTemperature);
+        
+        // Set the temperature throughout the page
+        document.getElementById('current_temperature').innerText = `${roundedTemperature}°F`;
+
+        const today = new Date().toLocaleString('default', { weekday: 'long' });
+        if (days[0].data.name === today) {
+            document.getElementById('banner_icon').insertAdjacentHTML('afterend', `<p class="snarky-quote">${iconData.quote}</p>`);
+        }
+
         document.getElementById('last_updated').innerText = 'Last updated ' + new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+
         changeLoadingBar(100, 'Done!');
     });
-}
+};
 
-document.getElementById('refresh').addEventListener('click', () => {
-    loadVariables();
-});
+
+
 
 loadVariables();

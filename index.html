@@ -6,22 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Weather Application</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="./index.js" defer></script>
 </head>
 <body>
     <main>
         <header>
             <div class="top">
-                <button id="refresh"><img src="./assets/arrow-clockwise-bold.svg" alt="Refresh"></button>
             </div>
             <div class="banner">
                 <img src="" id="banner_icon" alt="">
                 <div class="banner_data">
-                    <span id="location">Waiting for input...</span>
                     <div>
                         <span id="current_temperature">0°</span>
-                        <span id="feels_like">Feels like 0°</span>
                     </div>
                 </div>
             </div>
@@ -37,7 +33,7 @@
         </footer>
     </main>
     <div id="loading">
-        <h1>Simple Weather Application</h1>
+        <h1>Weather</h1>
         <span id="loading_status">Loading...</span>
         <div id="loading_bar"></div>
     </div>
